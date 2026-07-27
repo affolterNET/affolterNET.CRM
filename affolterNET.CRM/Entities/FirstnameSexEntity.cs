@@ -1,4 +1,4 @@
-using affolterNET.CRM.Core.Entities;
+using affolterNET.AzureStorage.Entities;
 using Azure;
 
 namespace affolterNET.CRM.Entities;
@@ -9,7 +9,7 @@ namespace affolterNET.CRM.Entities;
 /// slugged — "Hans Peter" → "hans", "André" → "andre"). The library ships the mechanism;
 /// the seed DATA is consumer-supplied (e.g. an open-data firstname list) plus manual entries.
 /// </summary>
-public class FirstnameSexEntity : ICrmEntity
+public class FirstnameSexEntity : IStorageEntity
 {
     public static string DefaultTableName => "firstnamesex";
 

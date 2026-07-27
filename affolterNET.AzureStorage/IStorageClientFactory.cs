@@ -1,7 +1,7 @@
 using Azure.Data.Tables;
 using Azure.Storage.Blobs;
 
-namespace affolterNET.CRM.Core.Storage;
+namespace affolterNET.AzureStorage;
 
 /// <summary>
 /// Factory for creating Azure Storage clients with the configured authentication.

@@ -1,4 +1,4 @@
-namespace affolterNET.CRM.Core.Entities;
+namespace affolterNET.AzureStorage.Entities;
 
 /// <summary>
 /// Cross-cutting provenance and lifecycle fields shared by tracked entities.

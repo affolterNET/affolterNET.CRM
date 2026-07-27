@@ -1,6 +1,6 @@
-using affolterNET.CRM.Core.Entities;
-using affolterNET.CRM.Core.Extensions;
-using affolterNET.CRM.Core.Storage;
+using affolterNET.AzureStorage.Entities;
+using affolterNET.AzureStorage.Extensions;
+using affolterNET.AzureStorage;
 using affolterNET.CRM.Entities;
 using affolterNET.CRM.Repositories;
 using affolterNET.CRM.Services;
@@ -17,20 +17,20 @@ public sealed class CrmOptions
 {
     private readonly Dictionary<string, RoleDefinition> _roles = new(StringComparer.Ordinal);
     private readonly HashSet<string> _organizationTypes = new(StringComparer.Ordinal);
-    private readonly List<Action<CrmCoreStorageOptions>> _consumerTables = [];
+    private readonly List<Action<AzureStorageOptions>> _consumerTables = [];
     private readonly List<string> _blobContainers = [];
 
     private Action<IServiceCollection> _personServices = RegisterPerson<PersonEntity>;
-    private Action<CrmCoreStorageOptions> _personTable = core => core.AddTable<PersonEntity>();
+    private Action<AzureStorageOptions> _personTable = core => core.AddTable<PersonEntity>();
     private Action<IServiceCollection> _organizationServices = RegisterOrganization<OrganizationEntity>;
-    private Action<CrmCoreStorageOptions> _organizationTable = core => core.AddTable<OrganizationEntity>();
+    private Action<AzureStorageOptions> _organizationTable = core => core.AddTable<OrganizationEntity>();
     private Action<IServiceCollection> _roleServices = RegisterRole<RoleEntity>;
-    private Action<CrmCoreStorageOptions> _roleTable = core => core.AddTable<RoleEntity>();
+    private Action<AzureStorageOptions> _roleTable = core => core.AddTable<RoleEntity>();
     private Action<IServiceCollection> _addressServices = RegisterAddress<AddressEntity>;
-    private Action<CrmCoreStorageOptions> _addressTable = core => core.AddTable<AddressEntity>();
+    private Action<AzureStorageOptions> _addressTable = core => core.AddTable<AddressEntity>();
 
     /// <summary>Configuration section the storage options are bound from.</summary>
-    public string StorageSectionName { get; set; } = CrmStorageOptions.DefaultSectionName;
+    public string StorageSectionName { get; set; } = StorageOptions.DefaultSectionName;
 
     /// <summary>Optional prefix applied to every table name.</summary>
     public string TablePrefix { get; set; } = string.Empty;
@@ -70,7 +70,7 @@ public sealed class CrmOptions
     }
 
     /// <summary>Registers a consumer-owned entity type (its table is created and resolvable).</summary>
-    public CrmOptions AddTable<T>() where T : ICrmEntity
+    public CrmOptions AddTable<T>() where T : IStorageEntity
     {
         _consumerTables.Add(core => core.AddTable<T>());
         return this;
@@ -130,7 +130,7 @@ public sealed class CrmOptions
     /// <summary>True when the organization type was registered via <see cref="AddOrganizationType"/>.</summary>
     public bool IsOrganizationTypeRegistered(string orgType) => _organizationTypes.Contains(orgType);
 
-    internal void ApplyTableRegistrations(CrmCoreStorageOptions core)
+    internal void ApplyTableRegistrations(AzureStorageOptions core)
     {
         _personTable(core);
         _organizationTable(core);

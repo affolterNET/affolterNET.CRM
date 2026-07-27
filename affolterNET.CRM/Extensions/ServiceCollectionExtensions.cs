@@ -1,5 +1,5 @@
 using affolterNET.CRM.Configuration;
-using affolterNET.CRM.Core.Extensions;
+using affolterNET.AzureStorage.Extensions;
 using affolterNET.CRM.Repositories;
 using affolterNET.CRM.Services;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +11,7 @@ namespace affolterNET.CRM.Extensions;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers the CRM data layer: storage (via affolterNET.CRM.Core), the person /
+    /// Registers the CRM data layer: storage (via affolterNET.AzureStorage), the person /
     /// organization / role / address repositories and services for the configured concrete
     /// entity types, the firstname→sex matchlist and the salutation resolver. All singletons.
     /// Call <c>StorageInitializer.InitializeAsync</c> at startup.
@@ -24,7 +24,7 @@ public static class ServiceCollectionExtensions
         var options = new CrmOptions();
         configure?.Invoke(options);
 
-        services.AddCrmCoreStorage(configuration, core =>
+        services.AddAzureStorage(configuration, core =>
         {
             core.StorageSectionName = options.StorageSectionName;
             core.TablePrefix = options.TablePrefix;

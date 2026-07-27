@@ -1,4 +1,4 @@
-namespace affolterNET.CRM.Core.Storage;
+namespace affolterNET.AzureStorage;
 
 /// <summary>
 /// Configuration options for Azure Storage access.
@@ -7,10 +7,10 @@ namespace affolterNET.CRM.Core.Storage;
 /// 2. StorageClientId - if set, uses ManagedIdentityCredential with this user-assigned client ID
 /// 3. Otherwise - uses DefaultAzureCredential (Azure CLI, VS, etc.)
 /// </summary>
-public class CrmStorageOptions
+public class StorageOptions
 {
     /// <summary>Default configuration section; overridable per consumer via the DI options.</summary>
-    public const string DefaultSectionName = "affolterNET:CRM:Storage";
+    public const string DefaultSectionName = "affolterNET:AzureStorage";
 
     /// <summary>
     /// Connection string for Azure Storage or the Azurite emulator.

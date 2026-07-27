@@ -1,5 +1,5 @@
-using affolterNET.CRM.Core.Entities;
-using affolterNET.CRM.Core.Storage;
+using affolterNET.AzureStorage.Entities;
+using affolterNET.AzureStorage;
 using affolterNET.CRM.Entities;
 using affolterNET.CRM.Services;
 

@@ -1,4 +1,4 @@
-using affolterNET.CRM.Core.Entities;
+using affolterNET.AzureStorage.Entities;
 using Azure;
 
 namespace affolterNET.CRM.Entities;
@@ -8,7 +8,7 @@ namespace affolterNET.CRM.Entities;
 /// "district", "organization"), RowKey = OrgId (slug). Hierarchies are expressed via the
 /// parent reference (e.g. club → district).
 /// </summary>
-public class OrganizationEntity : ICrmEntity, ITrackedEntity
+public class OrganizationEntity : IStorageEntity, ITrackedEntity
 {
     public static string DefaultTableName => "organizations";
 

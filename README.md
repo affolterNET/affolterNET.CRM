@@ -5,8 +5,8 @@ split into two NuGet packages:
 
 | Package | Contents |
 |---|---|
-| **affolterNET.CRM.Core** | Generic Table-Storage primitives with zero CRM knowledge: `TableRepositoryBase<T>`, `KeySanitizer`, `StorageClientFactory` (connection string → user-assigned managed identity → `DefaultAzureCredential`), registry-driven `StorageInitializer`, `ICrmEntity`, `ITrackedEntity` + field-level manual-override protection. Usable by any project that stores entities in Table Storage. |
-| **affolterNET.CRM** | The party-role model on top of Core: `PersonEntity`, `OrganizationEntity`, `RoleEntity`, `AddressEntity`, the firstname→sex matchlist with `SalutationResolver` (Anrede derivation), period-aware role resolution with nearest-period fallback, and `Ensure*` services that respect manual edits. |
+| **affolterNET.AzureStorage** | Generic Table-Storage primitives with zero CRM knowledge: `TableRepositoryBase<T>`, `KeySanitizer`, `StorageClientFactory` (connection string → user-assigned managed identity → `DefaultAzureCredential`), registry-driven `StorageInitializer`, `IStorageEntity`, `ITrackedEntity` + field-level manual-override protection. Usable by any project that stores entities in Azure Table Storage. |
+| **affolterNET.CRM** | The party-role model on top of affolterNET.AzureStorage: `PersonEntity`, `OrganizationEntity`, `RoleEntity`, `AddressEntity`, the firstname→sex matchlist with `SalutationResolver` (Anrede derivation), period-aware role resolution with nearest-period fallback, and `Ensure*` services that respect manual edits. |
 
 ## Model
 

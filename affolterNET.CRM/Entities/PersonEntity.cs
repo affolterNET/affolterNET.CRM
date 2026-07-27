@@ -1,4 +1,4 @@
-using affolterNET.CRM.Core.Entities;
+using affolterNET.AzureStorage.Entities;
 using Azure;
 
 namespace affolterNET.CRM.Entities;
@@ -11,7 +11,7 @@ namespace affolterNET.CRM.Entities;
 /// same person across contexts) or supply their own key. Fuzzy identity resolution is
 /// deliberately outside this library.
 /// </summary>
-public class PersonEntity : ICrmEntity, ITrackedEntity
+public class PersonEntity : IStorageEntity, ITrackedEntity
 {
     public static string DefaultTableName => "persons";
 

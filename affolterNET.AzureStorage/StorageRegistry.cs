@@ -1,6 +1,6 @@
-using affolterNET.CRM.Core.Entities;
+using affolterNET.AzureStorage.Entities;
 
-namespace affolterNET.CRM.Core.Storage;
+namespace affolterNET.AzureStorage;
 
 /// <summary>
 /// Maps registered entity types to their effective table names (default name plus an optional

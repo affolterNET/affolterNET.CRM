@@ -1,4 +1,4 @@
-namespace affolterNET.CRM.Core.Entities;
+namespace affolterNET.AzureStorage.Entities;
 
 /// <summary>
 /// Field-level manual-override protection: a property listed in

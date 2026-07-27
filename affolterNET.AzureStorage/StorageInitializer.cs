@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace affolterNET.CRM.Core.Storage;
+namespace affolterNET.AzureStorage;
 
 /// <summary>
 /// Creates every table and blob container listed in the <see cref="IStorageRegistry"/>.

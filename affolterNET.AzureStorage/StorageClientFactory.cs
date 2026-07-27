@@ -4,7 +4,7 @@ using Azure.Identity;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Options;
 
-namespace affolterNET.CRM.Core.Storage;
+namespace affolterNET.AzureStorage;
 
 /// <summary>
 /// Factory for creating Azure Storage clients with appropriate authentication.
@@ -15,11 +15,11 @@ namespace affolterNET.CRM.Core.Storage;
 /// </summary>
 public class StorageClientFactory : IStorageClientFactory
 {
-    private readonly CrmStorageOptions _storageOptions;
+    private readonly StorageOptions _storageOptions;
     private readonly TokenCredential? _credential;
     private readonly bool _useConnectionString;
 
-    public StorageClientFactory(IOptions<CrmStorageOptions> storageOptions)
+    public StorageClientFactory(IOptions<StorageOptions> storageOptions)
     {
         _storageOptions = storageOptions.Value;
         _useConnectionString = !string.IsNullOrWhiteSpace(_storageOptions.ConnectionString);

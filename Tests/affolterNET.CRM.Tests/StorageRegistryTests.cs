@@ -1,4 +1,4 @@
-using affolterNET.CRM.Core.Storage;
+using affolterNET.AzureStorage;
 using affolterNET.CRM.Entities;
 using Xunit;
 

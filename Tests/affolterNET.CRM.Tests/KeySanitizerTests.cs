@@ -1,4 +1,4 @@
-using affolterNET.CRM.Core.Entities;
+using affolterNET.AzureStorage.Entities;
 using Xunit;
 
 namespace affolterNET.CRM.Tests;

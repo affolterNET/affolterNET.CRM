@@ -1,7 +1,7 @@
-using affolterNET.CRM.Core.Entities;
+using affolterNET.AzureStorage.Entities;
 using Azure.Data.Tables;
 
-namespace affolterNET.CRM.Core.Storage;
+namespace affolterNET.AzureStorage;
 
 /// <summary>
 /// Small shared base for per-aggregate repositories: upsert, point-get, per-partition list,

@@ -1,5 +1,5 @@
 using affolterNET.CRM.Configuration;
-using affolterNET.CRM.Core.Storage;
+using affolterNET.AzureStorage;
 using affolterNET.CRM.Entities;
 using Azure.Data.Tables;
 

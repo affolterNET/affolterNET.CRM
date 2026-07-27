@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace affolterNET.CRM.Core.Entities;
+namespace affolterNET.AzureStorage.Entities;
 
 /// <summary>
 /// Validation and sanitization helpers for Azure Table Storage keys.

@@ -1,4 +1,4 @@
-using affolterNET.CRM.Core.Entities;
+using affolterNET.AzureStorage.Entities;
 using Azure;
 
 namespace affolterNET.CRM.Entities;
@@ -8,7 +8,7 @@ namespace affolterNET.CRM.Entities;
 /// "org_{orgType}_{orgId}"), RowKey = purpose (default "main"). One address per
 /// (owner, purpose); persons and organizations share the table.
 /// </summary>
-public class AddressEntity : ICrmEntity, ITrackedEntity
+public class AddressEntity : IStorageEntity, ITrackedEntity
 {
     public static string DefaultTableName => "addresses";
 

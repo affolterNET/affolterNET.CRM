@@ -1,5 +1,5 @@
 using affolterNET.CRM.Configuration;
-using affolterNET.CRM.Core.Entities;
+using affolterNET.AzureStorage.Entities;
 using Azure;
 
 namespace affolterNET.CRM.Entities;
@@ -13,7 +13,7 @@ namespace affolterNET.CRM.Entities;
 /// RowKey prefix range. No person data is snapshotted here — resolvers join the person.
 /// Past-period rows are never touched by syncs, so history stays displayable.
 /// </summary>
-public class RoleEntity : ICrmEntity, ITrackedEntity
+public class RoleEntity : IStorageEntity, ITrackedEntity
 {
     public static string DefaultTableName => "roles";
 

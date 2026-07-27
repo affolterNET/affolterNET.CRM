@@ -42,7 +42,7 @@ jobs:
     - name: Get and manage version
       id: version
       run: |
-        CURRENT_VERSION=$(grep '<Version>' affolterNET.CRM.Core/affolterNET.CRM.Core.csproj | sed 's/.*<Version>\(.*\)<\/Version>.*/\1/' | tr -d ' ')
+        CURRENT_VERSION=$(grep '<Version>' affolterNET.AzureStorage/affolterNET.AzureStorage.csproj | sed 's/.*<Version>\(.*\)<\/Version>.*/\1/' | tr -d ' ')
         echo "Found current version: '$CURRENT_VERSION'"
 
         if [ -z "$CURRENT_VERSION" ]; then
@@ -137,15 +137,15 @@ jobs:
 
     - name: Build projects (with project references)
       run: |
-        dotnet build affolterNET.CRM.Core/affolterNET.CRM.Core.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+        dotnet build affolterNET.AzureStorage/affolterNET.AzureStorage.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
         dotnet build affolterNET.CRM/affolterNET.CRM.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
 
     - name: Switch affolterNET.CRM to a NuGet reference for packaging
       run: |
         VERSION="${{ needs.build-and-test.outputs.version }}"
-        # The published affolterNET.CRM package must depend on the affolterNET.CRM.Core
+        # The published affolterNET.CRM package must depend on the affolterNET.AzureStorage
         # PACKAGE (same version), not on a project reference.
-        sed -i "s|<ProjectReference Include=\"../affolterNET.CRM.Core/affolterNET.CRM.Core.csproj\" />|<PackageReference Include=\"affolterNET.CRM.Core\" Version=\"$VERSION\" />|" affolterNET.CRM/affolterNET.CRM.csproj
+        sed -i "s|<ProjectReference Include=\"../affolterNET.AzureStorage/affolterNET.AzureStorage.csproj\" />|<PackageReference Include=\"affolterNET.AzureStorage\" Version=\"$VERSION\" />|" affolterNET.CRM/affolterNET.CRM.csproj
         grep -A1 ItemGroup affolterNET.CRM/affolterNET.CRM.csproj | grep -E "PackageReference|ProjectReference" || true
 
     - name: Pack NuGet packages
@@ -153,7 +153,7 @@ jobs:
         VERSION="${{ needs.build-and-test.outputs.version }}"
         echo "Packing packages with version $VERSION"
 
-        dotnet pack affolterNET.CRM.Core/affolterNET.CRM.Core.csproj \
+        dotnet pack affolterNET.AzureStorage/affolterNET.AzureStorage.csproj \
           --configuration ${{ env.BUILD_CONFIGURATION }} \
           --no-restore --no-build --output ./packages \
           --include-symbols --include-source -p:SymbolPackageFormat=snupkg
@@ -196,10 +196,10 @@ jobs:
         if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
           echo "Tag $TAG_NAME already exists"
         else
-          git tag -a "$TAG_NAME" -m "Release $TAG_NAME — affolterNET.CRM.Core + affolterNET.CRM v$VERSION"
+          git tag -a "$TAG_NAME" -m "Release $TAG_NAME — affolterNET.AzureStorage + affolterNET.CRM v$VERSION"
           git push origin "$TAG_NAME"
         fi
 
         echo "## Published v$VERSION" >> $GITHUB_STEP_SUMMARY
-        echo "- affolterNET.CRM.Core v$VERSION" >> $GITHUB_STEP_SUMMARY
+        echo "- affolterNET.AzureStorage v$VERSION" >> $GITHUB_STEP_SUMMARY
         echo "- affolterNET.CRM v$VERSION" >> $GITHUB_STEP_SUMMARY
