@@ -1,0 +1,205 @@
+name: Build and Publish NuGet Packages
+
+on:
+  push:
+    branches: [ develop, main ]
+    paths:
+      - '**/*.csproj'
+      - '**/*.cs'
+      - '.github/workflows/nuget-packages.yml'
+  workflow_dispatch:
+    inputs:
+      publish_to_nuget:
+        description: 'Publish to NuGet.org'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  BUILD_CONFIGURATION: 'Release'
+
+permissions:
+  contents: write       # Required to push version-bump commits and tags
+  actions: read
+
+jobs:
+  # Job 1: Build and test (with version management)
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should_publish: ${{ steps.publish-check.outputs.should_publish }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get and manage version
+      id: version
+      run: |
+        CURRENT_VERSION=$(grep '<Version>' affolterNET.CRM.Core/affolterNET.CRM.Core.csproj | sed 's/.*<Version>\(.*\)<\/Version>.*/\1/' | tr -d ' ')
+        echo "Found current version: '$CURRENT_VERSION'"
+
+        if [ -z "$CURRENT_VERSION" ]; then
+          CURRENT_VERSION="0.1.0"
+        fi
+
+        # On develop pushes, bump the patch version in all csproj files (kept in lockstep)
+        if [ "${{ github.ref }}" == "refs/heads/develop" ] && [ "${{ github.event_name }}" == "push" ]; then
+          MAJOR=$(echo "$CURRENT_VERSION" | cut -d'.' -f1)
+          MINOR=$(echo "$CURRENT_VERSION" | cut -d'.' -f2)
+          PATCH=$(echo "$CURRENT_VERSION" | cut -d'.' -f3)
+          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+
+          echo "Bumping version from $CURRENT_VERSION to $NEW_VERSION"
+          find . -name "*.csproj" -exec sed -i "s/<Version>.*<\/Version>/<Version>$NEW_VERSION<\/Version>/g" {} \;
+
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add ./*/*.csproj
+          if git diff --staged --quiet; then
+            echo "No version changes to commit"
+          else
+            git commit -m "chore: bump version to $NEW_VERSION"
+            git push origin develop
+          fi
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        else
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Check if should publish
+      id: publish-check
+      run: |
+        if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ github.event_name }}" == "push" ]; then
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+        else
+          echo "should_publish=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build solution
+      run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+
+    - name: Run tests
+      run: dotnet test --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --verbosity normal --logger trx --results-directory ./test-results
+      env:
+        # Storage integration tests run against an Azurite service container
+        CRM_TEST_STORAGE: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1"
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v7
+      if: always()
+      with:
+        name: test-results
+        path: ./test-results/*.trx
+
+    services:
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite
+        ports:
+          - 10000:10000
+          - 10001:10001
+          - 10002:10002
+
+  # Job 2: Pack and publish (main pushes or manual dispatch)
+  pack-and-publish:
+    needs: [build-and-test]
+    runs-on: ubuntu-latest
+    if: |
+      needs.build-and-test.outputs.should_publish == 'true' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_nuget == 'true')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build projects (with project references)
+      run: |
+        dotnet build affolterNET.CRM.Core/affolterNET.CRM.Core.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+        dotnet build affolterNET.CRM/affolterNET.CRM.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+
+    - name: Switch affolterNET.CRM to a NuGet reference for packaging
+      run: |
+        VERSION="${{ needs.build-and-test.outputs.version }}"
+        # The published affolterNET.CRM package must depend on the affolterNET.CRM.Core
+        # PACKAGE (same version), not on a project reference.
+        sed -i "s|<ProjectReference Include=\"../affolterNET.CRM.Core/affolterNET.CRM.Core.csproj\" />|<PackageReference Include=\"affolterNET.CRM.Core\" Version=\"$VERSION\" />|" affolterNET.CRM/affolterNET.CRM.csproj
+        grep -A1 ItemGroup affolterNET.CRM/affolterNET.CRM.csproj | grep -E "PackageReference|ProjectReference" || true
+
+    - name: Pack NuGet packages
+      run: |
+        VERSION="${{ needs.build-and-test.outputs.version }}"
+        echo "Packing packages with version $VERSION"
+
+        dotnet pack affolterNET.CRM.Core/affolterNET.CRM.Core.csproj \
+          --configuration ${{ env.BUILD_CONFIGURATION }} \
+          --no-restore --no-build --output ./packages \
+          --include-symbols --include-source -p:SymbolPackageFormat=snupkg
+
+        dotnet pack affolterNET.CRM/affolterNET.CRM.csproj \
+          --configuration ${{ env.BUILD_CONFIGURATION }} \
+          --no-restore --no-build --output ./packages \
+          --include-symbols --include-source -p:SymbolPackageFormat=snupkg
+
+        ls -la ./packages/
+
+    - name: Upload packages as artifacts
+      uses: actions/upload-artifact@v7
+      with:
+        name: nuget-packages
+        path: ./packages/*.nupkg
+
+    - name: Publish to NuGet.org
+      run: |
+        for package in ./packages/*.nupkg; do
+          # *.nupkg also matches *.snupkg — symbols are pushed alongside automatically
+          if [[ $package == *.snupkg ]]; then
+            continue
+          fi
+          echo "Publishing $package"
+          dotnet nuget push "$package" \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+        done
+
+    - name: Create and push git tag
+      run: |
+        VERSION="${{ needs.build-and-test.outputs.version }}"
+        TAG_NAME="v$VERSION"
+
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          echo "Tag $TAG_NAME already exists"
+        else
+          git tag -a "$TAG_NAME" -m "Release $TAG_NAME — affolterNET.CRM.Core + affolterNET.CRM v$VERSION"
+          git push origin "$TAG_NAME"
+        fi
+
+        echo "## Published v$VERSION" >> $GITHUB_STEP_SUMMARY
+        echo "- affolterNET.CRM.Core v$VERSION" >> $GITHUB_STEP_SUMMARY
+        echo "- affolterNET.CRM v$VERSION" >> $GITHUB_STEP_SUMMARY

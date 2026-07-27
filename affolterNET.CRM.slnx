@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/affolterNET.CRM.Tests/affolterNET.CRM.Tests.csproj" />
+  </Folder>
+  <Project Path="affolterNET.CRM.Core/affolterNET.CRM.Core.csproj" />
+  <Project Path="affolterNET.CRM/affolterNET.CRM.csproj" />
+</Solution>

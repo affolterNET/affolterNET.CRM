@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>affolterNET.CRM.Core</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>affolterNET</Authors>
+    <Description>Generic Azure Table Storage primitives: repository base class, key sanitizer, storage client factory and a registry-driven table/container initializer</Description>
+
+    <!-- NuGet Package Metadata -->
+    <PackageProjectUrl>https://github.com/affolterNET/affolterNET.CRM</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/affolterNET/affolterNET.CRM.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>azure;table-storage;repository;storage</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>See https://github.com/affolterNET/affolterNET.CRM/commits for recent changes.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="affolterNET.CRM.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Data.Tables" Version="12.11.0" />
+    <PackageReference Include="Azure.Identity" Version="1.17.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.25.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.9" />
+  </ItemGroup>
+
+</Project>

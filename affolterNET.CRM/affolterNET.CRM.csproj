@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>affolterNET.CRM</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>affolterNET</Authors>
+    <Description>Generic person/organization/role CRM data layer on Azure Table Storage: party-role model, addresses, firstname→sex salutation resolution, period-based role fallback, field-level manual-override protection</Description>
+
+    <!-- NuGet Package Metadata -->
+    <PackageProjectUrl>https://github.com/affolterNET/affolterNET.CRM</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/affolterNET/affolterNET.CRM.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>crm;party-role;azure;table-storage;persons;organizations</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>See https://github.com/affolterNET/affolterNET.CRM/commits for recent changes.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="affolterNET.CRM.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../affolterNET.CRM.Core/affolterNET.CRM.Core.csproj" />
+  </ItemGroup>
+
+</Project>
