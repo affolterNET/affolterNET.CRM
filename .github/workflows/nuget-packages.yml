@@ -122,6 +122,9 @@ jobs:
     if: |
       needs.build-and-test.outputs.should_publish == 'true' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_nuget == 'true')
+    permissions:
+      contents: write   # push the release tag
+      id-token: write   # GitHub OIDC token for NuGet Trusted Publishing
 
     steps:
     - name: Checkout code
@@ -171,6 +174,15 @@ jobs:
         name: nuget-packages
         path: ./packages/*.nupkg
 
+    # Trusted Publishing (no long-lived API keys): exchange the GitHub OIDC token for a
+    # 1-hour NuGet API key. Requires a trusted publishing policy on nuget.org for this
+    # repo + workflow file, and the NUGET_USER secret (the nuget.org profile name).
+    - name: NuGet login (OIDC → temp API key)
+      uses: NuGet/login@v1
+      id: nuget-login
+      with:
+        user: ${{ secrets.NUGET_USER }}
+
     - name: Publish to NuGet.org
       run: |
         for package in ./packages/*.nupkg; do
@@ -180,7 +192,7 @@ jobs:
           fi
           echo "Publishing $package"
           dotnet nuget push "$package" \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
         done
