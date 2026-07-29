@@ -59,4 +59,18 @@ public class KeySanitizerTests
         var newer = KeySanitizer.InvertedTimestamp(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
         Assert.True(string.CompareOrdinal(newer, older) < 0);
     }
+
+    [Theory]
+    [InlineData("René Müller", "rene-mueller")]
+    [InlineData("Éric Côté", "eric-cote")]
+    [InlineData("ÀÉÎÕÛ Č Š Ž", "aeiou-c-s-z")]
+    [InlineData("Ñoño", "nono")]
+    [InlineData("Ørsted", "rsted")] // no decomposition → separator, as under full ICU
+    [InlineData("Łukasz", "ukasz")]
+    public void ToSlug_FoldsDiacritics_CultureIndependent(string input, string expected)
+    {
+        // The fold table must behave identically under full ICU and in the
+        // globalization-invariant container runtime (divergence observed 2026-07-30).
+        Assert.Equal(expected, KeySanitizer.ToSlug(input));
+    }
 }
