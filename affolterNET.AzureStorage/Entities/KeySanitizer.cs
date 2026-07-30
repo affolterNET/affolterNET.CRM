@@ -50,6 +50,12 @@ public static class KeySanitizer
     /// Builds a key-safe slug from free text: lowercase, German umlaut folding
     /// (ä→ae, ö→oe, ü→ue, ß→ss), diacritics stripped, everything else collapsed to single hyphens.
     /// Throws <see cref="ArgumentException"/> if no slug can be derived.
+    /// CULTURE-INDEPENDENT by design: no ICU casing or Unicode normalization — in the
+    /// globalization-invariant runtime of the Alpine container images, ToLowerInvariant
+    /// only cases ASCII and Normalize does not decompose, so the same name produced
+    /// DIFFERENT slugs in the container than on a dev machine (observed 2026-07-30:
+    /// 2'056 of 62'876 BFS firstnames diverged). The explicit fold table reproduces the
+    /// former full-ICU behavior, so existing host-generated keys stay stable.
     /// </summary>
     public static string ToSlug(string text)
     {
@@ -58,26 +64,15 @@ public static class KeySanitizer
             throw new ArgumentException("Cannot build a slug from empty text.", nameof(text));
         }
 
-        var folded = text.ToLowerInvariant()
-            .Replace("ä", "ae")
-            .Replace("ö", "oe")
-            .Replace("ü", "ue")
-            .Replace("ß", "ss");
-
-        var normalized = folded.Normalize(NormalizationForm.FormD);
-        var sb = new StringBuilder(normalized.Length);
+        var sb = new StringBuilder(text.Length);
         var lastWasHyphen = true; // suppresses leading hyphens
 
-        foreach (var c in normalized)
+        foreach (var c in text)
         {
-            if (CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark)
+            var mapped = FoldChar(c);
+            if (mapped.Length > 0)
             {
-                continue; // strip combining diacritics (é → e)
-            }
-
-            if (c is >= 'a' and <= 'z' or >= '0' and <= '9')
-            {
-                sb.Append(c);
+                sb.Append(mapped);
                 lastWasHyphen = false;
             }
             else if (!lastWasHyphen)
@@ -94,6 +89,58 @@ public static class KeySanitizer
         }
 
         return slug;
+    }
+
+    /// <summary>
+    /// Ordinal char fold: a-z/0-9 pass, A-Z lowercase, German specials fold, Latin letters
+    /// with combining diacritics map to their base letter (matching what NFD + mark-strip
+    /// produced under full ICU). Characters WITHOUT a decomposition (ø, æ, ł, đ, ı, …)
+    /// return empty — they became separators before and must stay separators.
+    /// </summary>
+    private static string FoldChar(char c)
+    {
+        if (c is >= 'a' and <= 'z' or >= '0' and <= '9')
+        {
+            return c.ToString();
+        }
+
+        if (c is >= 'A' and <= 'Z')
+        {
+            return ((char)(c + 32)).ToString();
+        }
+
+        return c switch
+        {
+            'ä' or 'Ä' => "ae",
+            'ö' or 'Ö' => "oe",
+            'ü' or 'Ü' => "ue",
+            'ß' => "ss",
+            'à' or 'á' or 'â' or 'ã' or 'å' or 'ā' or 'ă' or 'ą'
+                or 'À' or 'Á' or 'Â' or 'Ã' or 'Å' or 'Ā' or 'Ă' or 'Ą' => "a",
+            'è' or 'é' or 'ê' or 'ë' or 'ē' or 'ĕ' or 'ė' or 'ę' or 'ě'
+                or 'È' or 'É' or 'Ê' or 'Ë' or 'Ē' or 'Ĕ' or 'Ė' or 'Ę' or 'Ě' => "e",
+            'ì' or 'í' or 'î' or 'ï' or 'ĩ' or 'ī' or 'ĭ' or 'į'
+                or 'Ì' or 'Í' or 'Î' or 'Ï' or 'Ĩ' or 'Ī' or 'Ĭ' or 'Į' or 'İ' => "i",
+            'ò' or 'ó' or 'ô' or 'õ' or 'ō' or 'ŏ' or 'ő'
+                or 'Ò' or 'Ó' or 'Ô' or 'Õ' or 'Ō' or 'Ŏ' or 'Ő' => "o",
+            'ù' or 'ú' or 'û' or 'ũ' or 'ū' or 'ŭ' or 'ů' or 'ű' or 'ų'
+                or 'Ù' or 'Ú' or 'Û' or 'Ũ' or 'Ū' or 'Ŭ' or 'Ů' or 'Ű' or 'Ų' => "u",
+            'ç' or 'ć' or 'ĉ' or 'ċ' or 'č' or 'Ç' or 'Ć' or 'Ĉ' or 'Ċ' or 'Č' => "c",
+            'ñ' or 'ń' or 'ņ' or 'ň' or 'Ñ' or 'Ń' or 'Ņ' or 'Ň' => "n",
+            'ý' or 'ÿ' or 'Ý' or 'Ÿ' => "y",
+            'ś' or 'ŝ' or 'ş' or 'š' or 'Ś' or 'Ŝ' or 'Ş' or 'Š' => "s",
+            'ź' or 'ż' or 'ž' or 'Ź' or 'Ż' or 'Ž' => "z",
+            'ĝ' or 'ğ' or 'ġ' or 'ģ' or 'Ĝ' or 'Ğ' or 'Ġ' or 'Ģ' => "g",
+            'ĥ' or 'Ĥ' => "h",
+            'ĵ' or 'Ĵ' => "j",
+            'ķ' or 'Ķ' => "k",
+            'ĺ' or 'ļ' or 'ľ' or 'Ĺ' or 'Ļ' or 'Ľ' => "l",
+            'ŕ' or 'ŗ' or 'ř' or 'Ŕ' or 'Ŗ' or 'Ř' => "r",
+            'ţ' or 'ť' or 'Ţ' or 'Ť' => "t",
+            'ŵ' or 'Ŵ' => "w",
+            'ď' or 'Ď' => "d",
+            _ => string.Empty,
+        };
     }
 
     /// <summary>
