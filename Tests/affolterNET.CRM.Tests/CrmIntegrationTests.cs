@@ -203,7 +203,13 @@ public class CrmIntegrationTests : IAsyncLifetime
             Source = Sources.Manual,
         });
 
-        Assert.Equal(1, await repository.SeedAsync([("Anna", Sexes.Female), ("Beat", Sexes.Male)]));
+        // Anna is manual, Beat unchanged — the re-seed writes NOTHING (2026-08-08: the old
+        // full rewrite of every unchanged row cost minutes per deploy).
+        Assert.Equal(0, await repository.SeedAsync([("Anna", Sexes.Female), ("Beat", Sexes.Male)]));
         Assert.Equal(Sexes.Male, await repository.LookupSexAsync("Anna"));
+
+        // A CHANGED seed value is still written — only unchanged rows are skipped.
+        Assert.Equal(1, await repository.SeedAsync([("Beat", Sexes.Female)]));
+        Assert.Equal(Sexes.Female, await repository.LookupSexAsync("Beat"));
     }
 }
